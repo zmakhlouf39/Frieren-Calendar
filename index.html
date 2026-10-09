@@ -1,0 +1,547 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Frieren's Grimoire</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0b1417;
+    --panel: #111e21;
+    --panel-2: #162529;
+    --line: #223539;
+    --line-soft: #1a2a2e;
+    --text: #e7f0ee;
+    --muted: #84a0a1;
+    --accent: #7fd1c7;
+    --gold: #d9b86c;
+    --danger: #e58b8b;
+    --glow: rgba(127, 209, 199, .12);
+    --serif: "Cormorant Garamond", Georgia, "Times New Roman", serif;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  :root[data-theme="dawn"] {
+    --bg: #f1f5f0;
+    --panel: #fbfdfa;
+    --panel-2: #eaf1ec;
+    --line: #cfdcd3;
+    --line-soft: #e0e9e2;
+    --text: #1d2e2e;
+    --muted: #5d7777;
+    --accent: #2f8f86;
+    --gold: #a8812a;
+    --danger: #b94a4a;
+    --glow: rgba(47, 143, 134, .10);
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    font-family: var(--sans);
+    color: var(--text);
+    background:
+      radial-gradient(1px 1px at 12% 18%, rgba(255,255,255,.55) 50%, transparent 51%),
+      radial-gradient(1px 1px at 78% 8%, rgba(255,255,255,.45) 50%, transparent 51%),
+      radial-gradient(1.5px 1.5px at 91% 33%, rgba(217,184,108,.6) 50%, transparent 51%),
+      radial-gradient(1px 1px at 34% 62%, rgba(255,255,255,.35) 50%, transparent 51%),
+      radial-gradient(1px 1px at 63% 81%, rgba(255,255,255,.4) 50%, transparent 51%),
+      radial-gradient(ellipse at 20% -10%, var(--glow), transparent 55%),
+      var(--bg);
+    display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+  :root[data-theme="dawn"] body {
+    background: radial-gradient(ellipse at 20% -10%, var(--glow), transparent 55%), var(--bg);
+  }
+
+  header {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px;
+    padding: 14px 20px; border-bottom: 1px solid var(--line);
+  }
+  .brand { display: flex; align-items: center; gap: 10px; margin-right: auto; }
+  .brand svg { width: 26px; height: 26px; color: var(--gold); flex: none; }
+  .brand h1 { margin: 0; font: 700 26px/1 var(--serif); letter-spacing: .02em; }
+  .brand small { display: block; color: var(--muted); font-size: 12px; margin-top: 3px; }
+  .nav { display: flex; align-items: center; gap: 6px; }
+  .week-label { font: 600 20px/1 var(--serif); min-width: 190px; text-align: center; }
+  button, select, input, textarea { font: inherit; color: inherit; }
+  .btn {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 8px;
+    padding: 7px 12px; cursor: pointer; font-size: 13px;
+  }
+  .btn:hover { border-color: var(--accent); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #07211e; font-weight: 600; }
+  .btn.danger { color: var(--danger); }
+  .btn.icon { padding: 7px 10px; }
+  .tools { display: flex; gap: 6px; }
+
+  .legend {
+    display: flex; flex-wrap: wrap; gap: 8px 14px; padding: 10px 20px;
+    border-bottom: 1px solid var(--line); font-size: 13px; color: var(--muted);
+  }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .legend i { width: 10px; height: 10px; border-radius: 50%; background: var(--c); }
+  .legend b { color: var(--text); font-weight: 600; }
+  .legend .total { margin-left: auto; }
+
+  .scroller { flex: 1; overflow: auto; position: relative; }
+  .grid { display: grid; grid-template-columns: 52px repeat(7, minmax(110px, 1fr)); min-width: 860px; }
+  .head {
+    position: sticky; top: 0; z-index: 5; background: var(--bg);
+    border-bottom: 1px solid var(--line); padding: 8px 6px; text-align: center;
+  }
+  .head .dow { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+  .head .dom { font: 600 22px/1.1 var(--serif); }
+  .head.today .dom { color: var(--accent); }
+  .head.today .dow { color: var(--gold); }
+  .gutter { position: relative; }
+  .gutter div {
+    position: absolute; right: 8px; transform: translateY(-50%);
+    font-size: 11px; color: var(--muted);
+  }
+  .col { position: relative; border-left: 1px solid var(--line-soft); cursor: crosshair; }
+  .col.today { background: linear-gradient(var(--glow), transparent 70%); }
+  .hline { position: absolute; left: 0; right: 0; border-top: 1px solid var(--line-soft); pointer-events: none; }
+  .hline.half { border-top-style: dotted; opacity: .6; }
+
+  .block {
+    position: absolute; left: 3px; right: 5px; border-radius: 7px; padding: 3px 7px 3px 9px;
+    background: color-mix(in srgb, var(--c) 22%, var(--panel));
+    border: 1px solid color-mix(in srgb, var(--c) 55%, transparent);
+    border-left: 4px solid var(--c);
+    overflow: hidden; cursor: grab; touch-action: none; user-select: none;
+    font-size: 12px; line-height: 1.25;
+    box-shadow: 0 1px 6px rgba(0,0,0,.25);
+  }
+  .block.dragging { cursor: grabbing; opacity: .85; z-index: 4; box-shadow: 0 6px 18px rgba(0,0,0,.4); }
+  .block .t { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .block .tm { color: var(--muted); font-size: 11px; white-space: nowrap; }
+  .block.done { opacity: .55; }
+  .block.done .t { text-decoration: line-through; }
+  .block.done .t::before { content: "✿ "; color: var(--c); text-decoration: none; display: inline-block; }
+  .block .grip { position: absolute; left: 0; right: 0; bottom: 0; height: 7px; cursor: ns-resize; }
+  .ghost { position: absolute; left: 3px; right: 5px; border-radius: 7px; background: var(--glow); border: 1px dashed var(--accent); pointer-events: none; z-index: 3; }
+  .now { position: absolute; left: 0; right: 0; height: 0; border-top: 2px solid var(--gold); z-index: 3; pointer-events: none; }
+  .now::before { content: ""; position: absolute; left: -4px; top: -5px; width: 8px; height: 8px; border-radius: 50%; background: var(--gold); }
+
+  dialog {
+    background: var(--panel); color: var(--text); border: 1px solid var(--line);
+    border-radius: 14px; padding: 0; width: min(420px, 94vw);
+    box-shadow: 0 20px 60px rgba(0,0,0,.5);
+  }
+  dialog::backdrop { background: rgba(3, 10, 12, .6); backdrop-filter: blur(2px); }
+  form { padding: 20px; display: grid; gap: 14px; }
+  form h2 { margin: 0; font: 700 24px/1 var(--serif); }
+  label { display: grid; gap: 5px; font-size: 12px; color: var(--muted); }
+  input[type=text], input[type=date], input[type=time], select, textarea {
+    background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; color: var(--text);
+    color-scheme: dark;
+  }
+  :root[data-theme="dawn"] input, :root[data-theme="dawn"] select, :root[data-theme="dawn"] textarea { color-scheme: light; }
+  input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  textarea { resize: vertical; min-height: 60px; }
+  .row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+  .check { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--text); }
+  .actions { display: flex; gap: 8px; }
+  .actions .spacer { flex: 1; }
+  .err { color: var(--danger); font-size: 12px; min-height: 1em; margin: -6px 0 0; }
+
+  @media (max-width: 640px) {
+    header { padding: 10px 12px; }
+    .legend { padding: 8px 12px; }
+    .week-label { min-width: 0; font-size: 17px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 1l2.2 7.3L22 10l-6 4.6L17.5 22 12 17.8 6.5 22 8 14.6 2 10l7.8-1.7z"/></svg>
+    <div>
+      <h1>Frieren's Grimoire</h1>
+      <small>Time-block your week. Take your time, but don't waste it.</small>
+    </div>
+  </div>
+  <div class="nav">
+    <button class="btn icon" id="prev" title="Previous week (←)">‹</button>
+    <div class="week-label" id="weekLabel"></div>
+    <button class="btn icon" id="next" title="Next week (→)">›</button>
+    <button class="btn" id="today">Today</button>
+  </div>
+  <div class="tools">
+    <button class="btn" id="export" title="Download your blocks as JSON">Export</button>
+    <button class="btn" id="import" title="Load blocks from a JSON export">Import</button>
+    <button class="btn icon" id="theme" title="Toggle night / dawn">◐</button>
+    <input type="file" id="file" accept="application/json" hidden>
+  </div>
+</header>
+
+<div class="legend" id="legend"></div>
+
+<div class="scroller" id="scroller">
+  <div class="grid" id="grid"></div>
+</div>
+
+<dialog id="dlg">
+  <form method="dialog" id="form" novalidate>
+    <h2 id="dlgTitle">New block</h2>
+    <label>Title
+      <input type="text" id="fTitle" maxlength="80" placeholder="What's the spell?" autocomplete="off">
+    </label>
+    <label>Type
+      <select id="fCat"></select>
+    </label>
+    <div class="row">
+      <label>Date <input type="date" id="fDate" required></label>
+      <label>Start <input type="time" id="fStart" step="900" required></label>
+      <label>End <input type="time" id="fEnd" step="900" required></label>
+    </div>
+    <label>Notes
+      <textarea id="fNotes" placeholder="Optional"></textarea>
+    </label>
+    <label class="check"><input type="checkbox" id="fDone"> Completed</label>
+    <p class="err" id="err"></p>
+    <div class="actions">
+      <button type="button" class="btn danger" id="del">Delete</button>
+      <span class="spacer"></span>
+      <button type="button" class="btn" id="cancel">Cancel</button>
+      <button type="submit" class="btn primary">Save</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+(() => {
+  // ---- config -------------------------------------------------------
+  const DAY_START = 5;            // first visible hour
+  const DAY_END = 24;             // last visible hour
+  const HOUR_PX = 48;
+  const SNAP = 15;                // minutes
+  const PX_MIN = HOUR_PX / 60;
+  const STORE = "frieren-grimoire-v1";
+  const CATS = {
+    focus:    { name: "Deep work",  color: "#7fd1c7" },
+    edit:     { name: "Edit / Create", color: "#a597e6" },
+    outreach: { name: "Outreach",   color: "#d9b86c" },
+    learn:    { name: "Learn",      color: "#8fc98a" },
+    rest:     { name: "Rest",       color: "#e6a1b3" },
+  };
+
+  // ---- state --------------------------------------------------------
+  let blocks = load();
+  let weekStart = mondayOf(new Date());
+  let editingId = null;
+
+  function load() {
+    try { const v = JSON.parse(localStorage.getItem(STORE)); return Array.isArray(v) ? v : []; }
+    catch { return []; }
+  }
+  function save() {
+    try { localStorage.setItem(STORE, JSON.stringify(blocks)); } catch {}
+    renderLegend();
+  }
+
+  // ---- date helpers -------------------------------------------------
+  const pad = n => String(n).padStart(2, "0");
+  const iso = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const parseISO = s => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
+  function mondayOf(d) {
+    const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    x.setDate(x.getDate() - ((x.getDay() + 6) % 7));
+    return x;
+  }
+  const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+  const fmtTime = m => `${pad(Math.floor(m / 60) % 24)}:${pad(m % 60)}`;
+  const parseTime = s => { const [h, m] = s.split(":").map(Number); return h * 60 + m; };
+  const snap = m => Math.round(m / SNAP) * SNAP;
+  const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+  const uid = () => Math.random().toString(36).slice(2, 10);
+  const weekDays = () => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+
+  // ---- render -------------------------------------------------------
+  const $ = id => document.getElementById(id);
+  const grid = $("grid");
+  const yOf = m => (m - DAY_START * 60) * PX_MIN;
+  const minOf = y => DAY_START * 60 + y / PX_MIN;
+  const bodyH = (DAY_END - DAY_START) * HOUR_PX;
+
+  function render() {
+    const days = weekDays();
+    const todayISO = iso(new Date());
+    const a = days[0], b = days[6];
+    const opts = { month: "short", day: "numeric" };
+    $("weekLabel").textContent =
+      `${a.toLocaleDateString(undefined, opts)} – ${b.toLocaleDateString(undefined, opts)}, ${b.getFullYear()}`;
+
+    grid.innerHTML = "";
+    grid.appendChild(el("div", "head"));
+    days.forEach(d => {
+      const h = el("div", "head" + (iso(d) === todayISO ? " today" : ""));
+      h.innerHTML = `<div class="dow">${d.toLocaleDateString(undefined, { weekday: "short" })}</div><div class="dom">${d.getDate()}</div>`;
+      grid.appendChild(h);
+    });
+
+    const gut = el("div", "gutter");
+    gut.style.height = bodyH + "px";
+    for (let h = DAY_START + 1; h < DAY_END; h++) {
+      const l = el("div"); l.textContent = `${pad(h)}:00`; l.style.top = yOf(h * 60) + "px"; gut.appendChild(l);
+    }
+    grid.appendChild(gut);
+
+    days.forEach(d => {
+      const key = iso(d);
+      const col = el("div", "col" + (key === todayISO ? " today" : ""));
+      col.dataset.date = key;
+      col.style.height = bodyH + "px";
+      for (let h = DAY_START; h < DAY_END; h++) {
+        const l = el("div", "hline"); l.style.top = yOf(h * 60) + "px"; col.appendChild(l);
+        const s = el("div", "hline half"); s.style.top = yOf(h * 60 + 30) + "px"; col.appendChild(s);
+      }
+      blocks.filter(x => x.date === key).forEach(x => col.appendChild(blockEl(x)));
+      grid.appendChild(col);
+    });
+    renderNow();
+    renderLegend();
+  }
+
+  function el(tag, cls) { const e = document.createElement(tag); if (cls) e.className = cls; return e; }
+
+  function blockEl(b) {
+    const e = el("div", "block" + (b.done ? " done" : ""));
+    e.dataset.id = b.id;
+    e.style.setProperty("--c", (CATS[b.cat] || CATS.focus).color);
+    layoutBlock(e, b.start, b.end);
+    const t = el("div", "t"); t.textContent = b.title || (CATS[b.cat] || CATS.focus).name;
+    const tm = el("div", "tm"); tm.textContent = `${fmtTime(b.start)} – ${fmtTime(b.end)}`;
+    const g = el("div", "grip");
+    e.append(t, tm, g);
+    e.title = b.notes ? b.notes : "";
+    return e;
+  }
+  function layoutBlock(e, start, end) {
+    e.style.top = yOf(start) + "px";
+    e.style.height = Math.max(yOf(end) - yOf(start) - 1, 14) + "px";
+    const tm = e.querySelector(".tm");
+    if (tm) tm.textContent = `${fmtTime(start)} – ${fmtTime(end)}`;
+  }
+
+  function renderNow() {
+    document.querySelectorAll(".now").forEach(n => n.remove());
+    const col = grid.querySelector(".col.today");
+    if (!col) return;
+    const n = new Date(), m = n.getHours() * 60 + n.getMinutes();
+    if (m < DAY_START * 60 || m > DAY_END * 60) return;
+    const line = el("div", "now"); line.style.top = yOf(m) + "px"; col.appendChild(line);
+  }
+
+  function renderLegend() {
+    const keys = new Set(weekDays().map(iso));
+    const mins = {}; let total = 0, done = 0, count = 0;
+    blocks.forEach(b => {
+      if (!keys.has(b.date)) return;
+      mins[b.cat] = (mins[b.cat] || 0) + (b.end - b.start);
+      total += b.end - b.start; count++; if (b.done) done++;
+    });
+    const hrs = m => (m / 60).toFixed(m % 60 ? 1 : 0) + "h";
+    $("legend").innerHTML =
+      Object.entries(CATS).map(([k, c]) =>
+        `<span style="--c:${c.color}"><i></i>${c.name} <b>${hrs(mins[k] || 0)}</b></span>`).join("") +
+      `<span class="total">Planned <b>${hrs(total)}</b> · ✿ ${done}/${count} done</span>`;
+  }
+
+  // ---- pointer interactions ----------------------------------------
+  const cols = () => [...grid.querySelectorAll(".col")];
+  function colAt(x) {
+    return cols().find(c => { const r = c.getBoundingClientRect(); return x >= r.left && x < r.right; });
+  }
+  const yIn = (col, clientY) => clientY - col.getBoundingClientRect().top;
+
+  // create by dragging on an empty column
+  grid.addEventListener("pointerdown", e => {
+    const col = e.target.closest(".col");
+    if (!col || e.target.closest(".block") || e.button !== 0) return;
+    if (e.pointerType === "touch") return; // let touch scroll; tap handled below
+    e.preventDefault();
+    col.setPointerCapture(e.pointerId);
+    const anchor = clamp(snap(minOf(yIn(col, e.clientY))), DAY_START * 60, DAY_END * 60 - SNAP);
+    const ghost = el("div", "ghost"); col.appendChild(ghost);
+    let s = anchor, en = anchor + SNAP;
+    const draw = () => { ghost.style.top = yOf(s) + "px"; ghost.style.height = yOf(en) - yOf(s) + "px"; };
+    draw();
+    const move = ev => {
+      const m = clamp(snap(minOf(yIn(col, ev.clientY))), DAY_START * 60, DAY_END * 60);
+      if (m >= anchor) { s = anchor; en = Math.max(m, anchor + SNAP); } else { s = m; en = anchor; }
+      draw();
+    };
+    const up = ev => {
+      col.removeEventListener("pointermove", move);
+      col.removeEventListener("pointerup", up);
+      col.removeEventListener("pointercancel", cancel);
+      ghost.remove();
+      const dragged = en - s > SNAP;
+      openDialog({ date: col.dataset.date, start: s, end: dragged ? en : Math.min(s + 60, DAY_END * 60) });
+    };
+    const cancel = () => {
+      col.removeEventListener("pointermove", move);
+      col.removeEventListener("pointerup", up);
+      col.removeEventListener("pointercancel", cancel);
+      ghost.remove();
+    };
+    col.addEventListener("pointermove", move);
+    col.addEventListener("pointerup", up);
+    col.addEventListener("pointercancel", cancel);
+  });
+
+  // touch: tap empty space to add a 1h block
+  grid.addEventListener("click", e => {
+    if (e.pointerType !== "touch") return;
+    const col = e.target.closest(".col");
+    if (!col || e.target.closest(".block")) return;
+    const s = clamp(snap(minOf(yIn(col, e.clientY))), DAY_START * 60, DAY_END * 60 - 60);
+    openDialog({ date: col.dataset.date, start: s, end: s + 60 });
+  });
+
+  // move / resize existing blocks
+  grid.addEventListener("pointerdown", e => {
+    const node = e.target.closest(".block");
+    if (!node || e.button !== 0) return;
+    e.preventDefault();
+    const b = blocks.find(x => x.id === node.dataset.id);
+    if (!b) return;
+    const resizing = e.target.classList.contains("grip");
+    const startX = e.clientX, startY = e.clientY;
+    const orig = { ...b };
+    const dur = b.end - b.start;
+    let moved = false, cur = { date: b.date, start: b.start, end: b.end };
+    node.setPointerCapture(e.pointerId);
+
+    const move = ev => {
+      if (!moved && Math.hypot(ev.clientX - startX, ev.clientY - startY) < 4) return;
+      moved = true;
+      node.classList.add("dragging");
+      const dm = snap((ev.clientY - startY) / PX_MIN);
+      if (resizing) {
+        cur.end = clamp(orig.end + dm, orig.start + SNAP, DAY_END * 60);
+      } else {
+        cur.start = clamp(orig.start + dm, DAY_START * 60, DAY_END * 60 - dur);
+        cur.end = cur.start + dur;
+        const col = colAt(ev.clientX);
+        if (col && col.dataset.date !== cur.date) { cur.date = col.dataset.date; col.appendChild(node); }
+      }
+      layoutBlock(node, cur.start, cur.end);
+    };
+    const finish = commit => {
+      node.removeEventListener("pointermove", move);
+      node.removeEventListener("pointerup", up);
+      node.removeEventListener("pointercancel", cancel);
+      node.classList.remove("dragging");
+      if (!moved) { if (commit) openDialog(b); return; }
+      if (commit) { Object.assign(b, cur); save(); }
+      render();
+    };
+    const up = () => finish(true);
+    const cancel = () => finish(false);
+    node.addEventListener("pointermove", move);
+    node.addEventListener("pointerup", up);
+    node.addEventListener("pointercancel", cancel);
+  });
+
+  // ---- dialog -------------------------------------------------------
+  const dlg = $("dlg");
+  $("fCat").innerHTML = Object.entries(CATS).map(([k, c]) => `<option value="${k}">${c.name}</option>`).join("");
+
+  function openDialog(b) {
+    editingId = b.id || null;
+    $("dlgTitle").textContent = editingId ? "Edit block" : "New block";
+    $("fTitle").value = b.title || "";
+    $("fCat").value = b.cat || lastCat();
+    $("fDate").value = b.date;
+    $("fStart").value = fmtTime(b.start);
+    $("fEnd").value = fmtTime(b.end);
+    $("fNotes").value = b.notes || "";
+    $("fDone").checked = !!b.done;
+    $("del").style.display = editingId ? "" : "none";
+    $("err").textContent = "";
+    dlg.showModal();
+    $("fTitle").focus();
+  }
+  const lastCat = () => { try { return localStorage.getItem(STORE + "-cat") || "focus"; } catch { return "focus"; } };
+
+  $("form").addEventListener("submit", e => {
+    e.preventDefault();
+    const start = parseTime($("fStart").value || "");
+    let end = parseTime($("fEnd").value || "");
+    if (end === 0) end = 1440;
+    const date = $("fDate").value;
+    if (!date || isNaN(start) || isNaN(end)) { $("err").textContent = "Pick a date, start and end."; return; }
+    if (end <= start) { $("err").textContent = "End must be after start."; return; }
+    const data = {
+      title: $("fTitle").value.trim(), cat: $("fCat").value, date, start, end,
+      notes: $("fNotes").value.trim(), done: $("fDone").checked,
+    };
+    if (editingId) Object.assign(blocks.find(x => x.id === editingId), data);
+    else blocks.push({ id: uid(), ...data });
+    try { localStorage.setItem(STORE + "-cat", data.cat); } catch {}
+    save(); dlg.close(); render();
+  });
+  $("cancel").onclick = () => dlg.close();
+  $("del").onclick = () => {
+    blocks = blocks.filter(x => x.id !== editingId);
+    save(); dlg.close(); render();
+  };
+  dlg.addEventListener("click", e => { if (e.target === dlg) dlg.close(); });
+
+  // ---- nav, theme, import/export -----------------------------------
+  const go = n => { weekStart = addDays(weekStart, n * 7); render(); };
+  $("prev").onclick = () => go(-1);
+  $("next").onclick = () => go(1);
+  $("today").onclick = () => { weekStart = mondayOf(new Date()); render(); scrollToNow(); };
+  document.addEventListener("keydown", e => {
+    if (dlg.open || /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+    if (e.key === "ArrowLeft") go(-1);
+    if (e.key === "ArrowRight") go(1);
+  });
+
+  function setTheme(t) {
+    document.documentElement.dataset.theme = t;
+    try { localStorage.setItem(STORE + "-theme", t); } catch {}
+  }
+  try { setTheme(localStorage.getItem(STORE + "-theme") || "night"); } catch { setTheme("night"); }
+  $("theme").onclick = () => setTheme(document.documentElement.dataset.theme === "night" ? "dawn" : "night");
+
+  $("export").onclick = () => {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(blocks, null, 2)], { type: "application/json" }));
+    a.download = `frieren-grimoire-${iso(new Date())}.json`;
+    a.click(); URL.revokeObjectURL(a.href);
+  };
+  $("import").onclick = () => $("file").click();
+  $("file").onchange = async e => {
+    const f = e.target.files[0]; e.target.value = "";
+    if (!f) return;
+    try {
+      const v = JSON.parse(await f.text());
+      if (!Array.isArray(v)) throw 0;
+      const ok = v.filter(b => b && b.date && Number.isFinite(b.start) && Number.isFinite(b.end))
+                  .map(b => ({ id: b.id || uid(), title: "", cat: "focus", notes: "", done: false, ...b }));
+      if (!confirm(`Replace current blocks with ${ok.length} imported blocks?`)) return;
+      blocks = ok; save(); render();
+    } catch { alert("That file isn't a valid Grimoire export."); }
+  };
+
+  // ---- boot ---------------------------------------------------------
+  function scrollToNow() {
+    const n = new Date(), h = n.getHours();
+    const target = h >= DAY_START && h < DAY_END ? h - 1 : 7;
+    $("scroller").scrollTop = Math.max(0, (target - DAY_START) * HOUR_PX);
+  }
+  render();
+  scrollToNow();
+  setInterval(renderNow, 60000);
+})();
+</script>
+</body>
+</html>
